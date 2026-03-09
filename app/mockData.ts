@@ -1,42 +1,6 @@
 import { User, Utang } from "./types";
 
-export const mockUsers: User[] = [
-  {
-    id: 1,
-    created_at: "2025-11-15T08:30:00Z",
-    name: "Maria Santos",
-    payment_score: 85,
-    password_hash: "hashed_password_1",
-  },
-  {
-    id: 2,
-    created_at: "2025-12-01T10:00:00Z",
-    name: "Juan Dela Cruz",
-    payment_score: 62,
-    password_hash: "hashed_password_2",
-  },
-  {
-    id: 3,
-    created_at: "2026-01-10T14:20:00Z",
-    name: "Ana Reyes",
-    payment_score: 93,
-    password_hash: "hashed_password_3",
-  },
-  {
-    id: 4,
-    created_at: "2026-01-25T09:15:00Z",
-    name: "Carlos Garcia",
-    payment_score: 45,
-    password_hash: "hashed_password_4",
-  },
-  {
-    id: 5,
-    created_at: "2026-02-05T16:45:00Z",
-    name: "Bea Villanueva",
-    payment_score: 78,
-    password_hash: "hashed_password_5",
-  },
-];
+
 
 export const mockUtangs: Utang[] = [
   {

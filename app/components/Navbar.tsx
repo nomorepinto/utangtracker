@@ -15,6 +15,7 @@ export default function Navbar() {
   const handleLogout = () => {
     sessionStorage.removeItem("userId");
     sessionStorage.removeItem("userName");
+    sessionStorage.removeItem("isAdmin");
     router.push("/");
   };
 

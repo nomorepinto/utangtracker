@@ -13,12 +13,23 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Hardcoded admin credentials
+  const ADMIN_USERNAME = "admin";
+  const ADMIN_PASSWORD = "admin123";
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
+      // Check for admin credentials first
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem("isAdmin", "true");
+        router.push("/admin");
+        return;
+      }
+
       const hashed = await hashPassword(password);
 
       const { data: user, error: dbError } = await supabase

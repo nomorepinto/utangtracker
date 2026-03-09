@@ -18,8 +18,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = sessionStorage.getItem("userId");
-    if (!userId) {
+    const isAdmin = sessionStorage.getItem("isAdmin");
+    if (isAdmin !== "true") {
       router.push("/");
       return;
     }

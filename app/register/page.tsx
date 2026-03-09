@@ -3,40 +3,64 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "./lib/supabase";
-import { hashPassword } from "./lib/hash";
+import { supabase } from "../lib/supabase";
+import { hashPassword } from "../lib/hash";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const hashed = await hashPassword(password);
-
-      const { data: user, error: dbError } = await supabase
+      // Check if username already exists
+      const { data: existing } = await supabase
         .from("user")
-        .select("*")
+        .select("id")
         .eq("name", username)
-        .eq("password_hash", hashed)
         .single();
 
-      if (dbError || !user) {
-        setError("Invalid username or password.");
+      if (existing) {
+        setError("Username is already taken.");
         setIsLoading(false);
         return;
       }
 
-      sessionStorage.setItem("userId", String(user.id));
-      sessionStorage.setItem("userName", user.name);
-      router.push("/dashboard");
+      const hashed = await hashPassword(password);
+
+      const { error: insertError } = await supabase.from("user").insert({
+        name: username,
+        email: email,
+        password_hash: hashed,
+        payment_score: 100,
+      });
+
+      if (insertError) {
+        setError(insertError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      router.push("/");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -48,9 +72,9 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent-lavender/30 blur-3xl" />
-        <div className="absolute -right-32 top-1/3 h-80 w-80 rounded-full bg-accent-sky/25 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-accent-mint/25 blur-3xl" />
+        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-accent-mint/30 blur-3xl" />
+        <div className="absolute -left-32 top-1/3 h-80 w-80 rounded-full bg-accent-lavender/25 blur-3xl" />
+        <div className="absolute -bottom-24 right-1/3 h-72 w-72 rounded-full bg-accent-sky/25 blur-3xl" />
       </div>
 
       <div className="animate-fade-in relative w-full max-w-md">
@@ -60,16 +84,16 @@ export default function LoginPage() {
             U
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Utang<span className="gradient-text">Tracker</span>
+            Create <span className="gradient-text">Account</span>
           </h1>
           <p className="mt-2 text-sm text-muted">
-            Sign in to manage your debts
+            Sign up to start tracking your debts
           </p>
         </div>
 
-        {/* Login Card */}
+        {/* Register Card */}
         <div className="card-elevated p-8">
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleRegister} className="space-y-5">
             {/* Error message */}
             {error && (
               <div className="animate-fade-in rounded-xl bg-accent-peach-light border border-accent-peach px-4 py-3 text-sm text-red-600">
@@ -90,7 +114,26 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your name"
+                placeholder="Choose a username"
+                className="w-full rounded-xl border border-card-border bg-muted-bg/50 px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted focus:border-accent-lavender focus:bg-white focus:ring-2 focus:ring-accent-lavender/30"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
                 className="w-full rounded-xl border border-card-border bg-muted-bg/50 px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted focus:border-accent-lavender focus:bg-white focus:ring-2 focus:ring-accent-lavender/30"
                 required
               />
@@ -109,13 +152,32 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="At least 6 characters"
                 className="w-full rounded-xl border border-card-border bg-muted-bg/50 px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted focus:border-accent-lavender focus:bg-white focus:ring-2 focus:ring-accent-lavender/30"
                 required
               />
             </div>
 
-            {/* Login Button */}
+            {/* Confirm Password */}
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="w-full rounded-xl border border-card-border bg-muted-bg/50 px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted focus:border-accent-lavender focus:bg-white focus:ring-2 focus:ring-accent-lavender/30"
+                required
+              />
+            </div>
+
+            {/* Register Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -144,22 +206,22 @@ export default function LoginPage() {
                       className="opacity-75"
                     />
                   </svg>
-                  Signing in…
+                  Creating account…
                 </span>
               ) : (
-                "Sign In"
+                "Create Account"
               )}
             </button>
           </form>
 
-          {/* Register link */}
+          {/* Login link */}
           <p className="mt-6 text-center text-sm text-muted">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/register"
+              href="/"
               className="font-medium text-[#7c3aed] transition-colors hover:text-[#6d28d9]"
             >
-              Create one
+              Sign in
             </Link>
           </p>
         </div>
